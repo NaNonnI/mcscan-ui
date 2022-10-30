@@ -8,7 +8,7 @@ In dev:
 - [ ] Easy way to connect to MYSQL database
 - [ ] Number of hit
 - [ ] API and MassScan Helper directly in one EXE
-- [X] Download requirement (masscan & NPM)
+- [X] Download requirement (masscan, NPM & Winpcap)
 - [ ] Easy website deployment (and port error fix)
 - [ ] Import IP list
 
