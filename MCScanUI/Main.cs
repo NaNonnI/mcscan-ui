@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -19,9 +20,9 @@ namespace MCScanUI
         private static string tempPath = Path.GetTempPath();
         private static string tempPathExe = Path.Combine(Path.GetTempPath(), "mcscan");
         private static bool is64bit = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432"));
-
+        
         private static string masscanPath = Path.Combine(rootPath, "masscan");
-        private static string masscanexePath = Path.Combine(masscanPath, "masscan64.exe");
+        private string masscanexePath = Path.Combine(masscanPath, "masscan.exe");
 
         private static string nodejsPath = Path.Combine(rootPath, @"Program Files\nodejs");
         private static string npmexePath = Path.Combine(nodejsPath, "npm.cmd");
@@ -35,20 +36,27 @@ namespace MCScanUI
 
         private void Main_Load(object sender, EventArgs e)
         {
+            checkAll();
+        }
 
-            errorMsg(
-                    "Form is closing, open an issue on Github. \nThe link has been copied into the clipboard;",
-                    "An error as occured. | CHECKING REQUIREMENT",
-                    "CHECKING REQUIREMENT"
-            );
-
+        private void checkAll()
+        {
             //Checking requirement
+
+            if (is64bit)
+            {
+                masscanexePath = Path.Combine(masscanPath, "masscan64.exe");
+            }
+            else
+            {
+                masscanexePath = Path.Combine(masscanPath, "masscan32.exe");
+            }
 
             missingReq = hasRequired();
 
             reqlabel.Text = "Checking Requirement..";
             reqlabel.Text = "Requirement missing: " + missingReq;
-            if (missingReq != "None") { installReq(missingReq); }
+            if (missingReq != "None") { installReq(missingReq); checkAll(); }
         }
 
         //What requirement is missing?
@@ -59,11 +67,11 @@ namespace MCScanUI
 
             switch (missing) {
                 case "NPM":
-
+                    installNPM();
                     break;
 
                 case "Masscan":
-
+                    installMassScan();
                     break;
                 case "Nothing":
 
@@ -71,23 +79,81 @@ namespace MCScanUI
             }
         }
 
+        //Download & install MassScan
+        private void installMassScan()
+        {
+            bool isDownloaded = false;
+            string downloadPath = masscanexePath;
+
+            if(!Directory.Exists(masscanPath)) { Directory.CreateDirectory(masscanPath); }
+
+            if (is64bit)
+            {
+                isDownloaded = Download("https://github.com/Arryboom/MasscanForWindows/blob/master/masscan64.exe", downloadPath);
+            }
+            else
+            {
+                isDownloaded = Download("https://github.com/Arryboom/MasscanForWindows/blob/master/masscan32.exe", downloadPath);
+            }
+
+            if (isDownloaded)
+            {
+                string command = "/C set PATH=%PATH%;" + masscanPath;
+                Process.Start("cmd.exe", command);
+                installMassScanReq();
+            }
+            else
+            {
+                errorMsg(
+                    "Form is closing, open an issue on Github. \nThe link has been copied into the clipboard;",
+                    "An error as occured. | DOWNLOADING MASSCAN",
+                    "DOWNLOADING MASSCAN"
+                );
+            }
+        }
+
+        //Download & install MassScan Requirement
+        private void installMassScanReq()
+        {
+            bool isDownloaded = false;
+            string downloadPath = Path.Combine(tempPathExe, "winpcap.exe");
+
+            isDownloaded = Download("https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe", downloadPath);
+
+            if (isDownloaded)
+            {
+                string command = "/C start " + downloadPath;
+                Process.Start("cmd.exe", command);
+            }
+            else
+            {
+                errorMsg(
+                    "Form is closing, open an issue on Github. \nThe link has been copied into the clipboard;",
+                    "An error as occured. | DOWNLOADING WINPCAP",
+                    "DOWNLOADING WINPCAP"
+                );
+            }
+        }
+
         //Download & install NPM
         private void installNPM()
         {
             bool isDownloaded = false;
+            string downloadPath = Path.Combine(tempPathExe, "nodejs.msi");
 
             if (is64bit)
             {
-                Download("https://nodejs.org/dist/v18.12.0/node-v18.12.0-x64.msi", Path.Combine(tempPathExe, "nodejs.msi"));
+                isDownloaded = Download("https://nodejs.org/dist/v18.12.0/node-v18.12.0-x64.msi", downloadPath);
             } 
             else
             {
-                Download("https://nodejs.org/dist/v18.12.0/node-v18.12.0-x86.msi", Path.Combine(tempPathExe, "nodejs.msi"));
+                isDownloaded = Download("https://nodejs.org/dist/v18.12.0/node-v18.12.0-x86.msi", downloadPath);
             }
 
             if(isDownloaded)
             {
-
+                string command = "/C msiexec /i " + downloadPath;
+                Process.Start("cmd.exe", command);
             } 
             else
             {
@@ -97,7 +163,6 @@ namespace MCScanUI
                     "DOWNLOADING NPM"
                 );
             }
-
         }
 
 
