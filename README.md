@@ -5,7 +5,6 @@ Backend edited by Nonomi. based on SieBRUM minecraft-server-discovery
 ## Nonomi.
 ### Written in C# - Net Framework 4.8
 In dev:
-- [ ] Easy way to connect to MYSQL database
 - [ ] Number of hit
 - [X] Download requirement (masscan, NPM & Winpcap)
 - [ ] Easy website deployment (and port error fix)
