@@ -29,6 +29,9 @@ namespace MCScanUI
 
         private string missingReq = "Nothing";
 
+        private bool hasFile = false;
+        private string pathFile = "???";
+
         public Main()
         {
             InitializeComponent();
@@ -37,6 +40,24 @@ namespace MCScanUI
         private void Main_Load(object sender, EventArgs e)
         {
             checkAll();
+
+            refreshFile();
+        }
+
+        private void refreshFile()
+        {
+            if (!hasFile)
+            {
+                scanFileB.Text = "Scan?";
+                scanFileB.ForeColor = Color.Red;
+            }
+            else
+            {
+                scanFileB.Text = "Scan!";
+                scanFileB.ForeColor = Color.Green;
+            }
+
+            scanFileTB.Text = pathFile;
         }
 
         private void checkAll()
@@ -216,12 +237,12 @@ namespace MCScanUI
                 }
             }
 
-            return "Errored";
             errorMsg(
                     "Form is closing, open an issue on Github. \nThe link has been copied into the clipboard;",
                     "An error as occured. | CHECKING REQUIREMENT",
                     "CHECKING REQUIREMENT"
             );
+            return "Errored";
         }
 
         private void errorMsg(string message, string caption, string error)
@@ -232,6 +253,37 @@ namespace MCScanUI
                 Clipboard.SetText("https://github.com/NaNonnI/mcscan-ui/issues/new?title=[" + error.Replace(" ", "%20") + "]&labels=crash");
                 this.Dispose();
                 this.Close();
+            }
+        }
+
+        private void scanFileB_Click(object sender, EventArgs e)
+        {
+            if (!hasFile)
+            {
+                openFileDialog.InitialDirectory = rootPath;
+                openFileDialog.Filter = "MasscanFile (*.txt)|*.txt";
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.RestoreDirectory = true;
+                openFileDialog.Title = "Open masscan.txt file from MassScan output";
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    //Get the path of specified file
+                    pathFile = openFileDialog.FileName;
+                    hasFile = true;
+                    refreshFile();
+                }
+            } 
+            else
+            {
+                if (!File.Exists(pathFile))
+                {
+                    hasFile = false;
+                    refreshFile();
+                    return;
+                }
+
+
             }
         }
     }
